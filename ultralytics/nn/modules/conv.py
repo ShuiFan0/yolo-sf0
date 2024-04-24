@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 
 __all__ = (
+    "ConvSX1i",
     "Conv",
     "Conv2",
     "LightConv",
@@ -33,6 +34,98 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
     return p
 
 
+class ConvSX1i(nn.Module):
+    """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
+
+    default_act = nn.SiLU()  # default activation
+
+    def __init__(self, c1, c2, s=1):
+        """Initialize Conv layer with given arguments including activation."""
+        super().__init__()
+        
+
+        out_channels= c2
+        in_channels = c1
+        kernel_size = 3
+        self.padding = 5//2
+        self.stride=s
+        self.weight_tensor_A = nn.Parameter(torch.randn(out_channels, in_channels, kernel_size, kernel_size))
+        self.weight_tensor_B = nn.Parameter(torch.randn(out_channels, in_channels, kernel_size, kernel_size))
+        
+        self.out_channels=out_channels
+        self.in_channels =in_channels 
+        self.kernel_size =kernel_size 
+
+
+    def forward(self, x):
+        
+        weight_tensor = torch.zeros(self.out_channels, self.in_channels, self.kernel_size+2, self.kernel_size+2,device = self.weight_tensor_A.device,dtype=self.weight_tensor_A.dtype)
+        weight_tensor[:,:,1:3+1,1:3+1]=self.weight_tensor_A[:,:,0:2+1,0:2+1]
+        weight_tensor[:,:,0,0]=self.weight_tensor_B[:,:,0,0]
+        weight_tensor[:,:,0,2]=self.weight_tensor_B[:,:,0,1]
+        weight_tensor[:,:,0,4]=self.weight_tensor_B[:,:,0,2]
+        weight_tensor[:,:,2,0]=self.weight_tensor_B[:,:,1,0]
+        weight_tensor[:,:,1,1:3+1]*=self.weight_tensor_B[:,:,1,1:1+1]
+        weight_tensor[:,:,2,1:3+1]*=self.weight_tensor_B[:,:,1,1:1+1]
+        weight_tensor[:,:,3,1:3+1]*=self.weight_tensor_B[:,:,1,1:1+1]
+        weight_tensor[:,:,2,4]=self.weight_tensor_B[:,:,1,2]
+        weight_tensor[:,:,4,0]=self.weight_tensor_B[:,:,2,0]
+        weight_tensor[:,:,4,2]=self.weight_tensor_B[:,:,2,1]
+        weight_tensor[:,:,4,4]=self.weight_tensor_B[:,:,2,2]
+        return nn.functional.conv2d(x, weight_tensor, None, self.stride,self.padding)
+
+
+class ConvSX1(nn.Module):
+    """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
+
+    default_act = nn.SiLU()  # default activation
+
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+        """Initialize Conv layer with given arguments including activation."""
+        super().__init__()
+        self.conv1 = ConvSX1i(c1, c2, s)
+        self.bn1 = nn.BatchNorm2d(c2)
+        self.conv2 = ConvSX1i(c1, c2, s)
+        self.bn2 = nn.BatchNorm2d(c2)
+        self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
+       
+    def forward(self, x):
+        """Apply convolution, batch normalization and activation to input tensor."""
+        #return self.act(self.bn(self.conv(x)))
+        return self.act(self.bn1(self.conv1(x))) - self.act(self.bn2(self.conv2(x)))
+
+
+
+# class ConvSX1(nn.Module):
+#     """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
+
+#     default_act = nn.SiLU()  # default activation
+
+#     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+#         """Initialize Conv layer with given arguments including activation."""
+#         super().__init__()
+#         self.conv1A = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
+#         self.conv1B = nn.Conv2d(c1, c2, k, s, autopad(k, p, d+1), groups=g, dilation=d+1, bias=False)
+#         self.bn1 = nn.BatchNorm2d(c2)
+#         self.conv2A = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
+#         self.conv2B = nn.Conv2d(c1, c2, k, s, autopad(k, p, d+1), groups=g, dilation=d+1, bias=False)
+#         self.bn2 = nn.BatchNorm2d(c2)
+#         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
+        
+        
+#         self.conv = self.conv1A
+#         self.bn = self.bn1
+
+#     def forward(self, x):
+#         """Apply convolution, batch normalization and activation to input tensor."""
+#         #return self.act(self.bn(self.conv(x)))
+#         return self.act(self.bn1(self.conv1A(x) + self.conv1B(x))) - self.act(self.bn2(self.conv2A(x) + self.conv2B(x)))
+
+#     def forward_fuse(self, x):
+#         """Perform transposed convolution of 2D data."""
+#         #return self.act(self.conv(x))
+#         return self.act(self.bn1(self.conv1A(x) + self.conv1B(x))) - self.act(self.bn2(self.conv2A(x) + self.conv2B(x)))
+
 class Conv(nn.Module):
     """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
 
@@ -44,7 +137,7 @@ class Conv(nn.Module):
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
         self.bn = nn.BatchNorm2d(c2)
         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
-
+        
     def forward(self, x):
         """Apply convolution, batch normalization and activation to input tensor."""
         return self.act(self.bn(self.conv(x)))

@@ -21,6 +21,7 @@ from ultralytics.nn.modules import (
     Bottleneck,
     BottleneckCSP,
     C2f,
+    C2fS,
     C2fAttn,
     C3Ghost,
     C3x,
@@ -29,6 +30,7 @@ from ultralytics.nn.modules import (
     Classify,
     Concat,
     ConvSX1,
+    ConvS,
     Conv,
     Conv2,
     ConvTranspose,
@@ -863,6 +865,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         if m in {
             Classify,
             ConvSX1,
+            ConvS,
             Conv,
             ConvTranspose,
             GhostConv,
@@ -876,6 +879,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             C1,
             C2,
             C2f,
+            C2fS,
             RepNCSPELAN4,
             ADown,
             SPPELAN,
@@ -898,7 +902,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 )  # num heads
 
             args = [c1, c2, *args[1:]]
-            if m in {BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3}:
+            if m in {BottleneckCSP, C1, C2, C2f, C2fS, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3}:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:

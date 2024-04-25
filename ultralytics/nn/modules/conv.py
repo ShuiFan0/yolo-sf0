@@ -8,7 +8,8 @@ import torch
 import torch.nn as nn
 
 __all__ = (
-    "ConvSX1i",
+    "ConvSX1",
+    "ConvS",
     "Conv",
     "Conv2",
     "LightConv",
@@ -132,6 +133,28 @@ class ConvSX1(nn.Module):
 #         """Perform transposed convolution of 2D data."""
 #         #return self.act(self.conv(x))
 #         return self.act(self.bn1(self.conv1A(x) + self.conv1B(x))) - self.act(self.bn2(self.conv2A(x) + self.conv2B(x)))
+
+
+class ConvS(nn.Module):
+    """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
+
+    default_act = nn.SiLU()  # default activation
+
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+        """Initialize Conv layer with given arguments including activation."""
+        super().__init__()
+        
+        self.conv1 = Conv(c1=c1, c2=c2, k=k, s=s, p=p, g=g, d=d, act=act)
+        self.conv2 = Conv(c1=c1, c2=c2, k=k, s=s, p=p, g=g, d=d, act=act)
+        
+    def forward(self, x):
+        """Apply convolution, batch normalization and activation to input tensor."""
+        return self.conv1(x) - self.conv2(x)
+
+    def forward_fuse(self, x):
+        """Perform transposed convolution of 2D data."""
+        return self.act(self.conv(x))
+
 
 class Conv(nn.Module):
     """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""

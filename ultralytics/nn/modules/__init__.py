@@ -31,6 +31,7 @@ from .block import (
     Bottleneck,
     BottleneckCSP,
     C2f,
+    C2fS,
     C2fAttn,
     C3Ghost,
     C3x,
@@ -52,6 +53,7 @@ from .conv import (
     ChannelAttention,
     Concat,
     ConvSX1,
+    ConvS,
     Conv,
     Conv2,
     ConvTranspose,
@@ -79,6 +81,7 @@ from .transformer import (
 
 __all__ = (
     "ConvSX1",
+    "ConvS",
     "Conv",
     "Conv2",
     "LightConv",
@@ -105,6 +108,7 @@ __all__ = (
     "C2",
     "C3",
     "C2f",
+    "C2fS",
     "C2fAttn",
     "C3x",
     "C3TR",

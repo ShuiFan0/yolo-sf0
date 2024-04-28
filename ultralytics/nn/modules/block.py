@@ -713,3 +713,17 @@ class CBFuse(nn.Module):
         res = [F.interpolate(x[self.idx[i]], size=target_size, mode="nearest") for i, x in enumerate(xs[:-1])]
         out = torch.sum(torch.stack(res + xs[-1:]), dim=0)
         return out
+
+
+# class SFZoom(nn.Module):
+#     """SFReduction."""
+    
+#     def __init__(self, c1, ratio) -> None:
+#         super().__init__()
+#         nn.Upsample()
+#         self.c1 = c1
+#         self.ratio = ratio
+        
+#     def forward(self, x):
+#         torch.nn.Upsample().Downsample()
+#         return torch.nn.functional.interpolate(x,)

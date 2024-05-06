@@ -151,10 +151,6 @@ class ConvS(nn.Module):
         """Apply convolution, batch normalization and activation to input tensor."""
         return self.conv1(x) - self.conv2(x)
 
-    def forward_fuse(self, x):
-        """Perform transposed convolution of 2D data."""
-        return self.act(self.conv(x))
-
 
 class Conv(nn.Module):
     """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""

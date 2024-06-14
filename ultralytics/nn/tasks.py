@@ -54,6 +54,7 @@ from ultralytics.nn.modules import (
     Silence,
     PSA,
     PSAS,
+    SCDown,
     WorldDetect,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, colorstr, emojis, yaml_load
@@ -897,6 +898,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             RepC3,
             PSA,
             PSAS,
+            SCDown,
         }:
             c1, c2 = ch[f], args[0]
             if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)

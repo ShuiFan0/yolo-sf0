@@ -50,6 +50,7 @@ from .block import (
     Silence,
     PSA,
     PSAS,
+    SCDown,
 )
 from .conv import (
     CBAM,
@@ -147,4 +148,5 @@ __all__ = (
     "Silence",
     "PSA",
     "PSAS",
+    "SCDown",
 )

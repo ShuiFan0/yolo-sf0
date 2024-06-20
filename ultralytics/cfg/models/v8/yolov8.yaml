@@ -16,10 +16,10 @@ backbone:
   # [from, repeats, module, args]
   - [-1, 1, Silence, []] # 0
   - [0, 1, nn.Upsample, [None, 0.5, "bilinear"]] # 1
-  - [0, 1, nn.Upsample, [None, 0.25, "bilinear"]] # 2
-  - [0, 1, nn.Upsample, [None, 0.125, "bilinear"]] # 3
-  - [0, 1, nn.Upsample, [None, 0.0625, "bilinear"]] # 4
-  - [0, 1, nn.Upsample, [None, 0.03125, "bilinear"]] # 5
+  - [1, 1, nn.Upsample, [None, 0.5, "bilinear"]] # 2
+  - [2, 1, nn.Upsample, [None, 0.5, "bilinear"]] # 3
+  - [3, 1, nn.Upsample, [None, 0.5, "bilinear"]] # 4
+  - [4, 1, nn.Upsample, [None, 0.5, "bilinear"]] # 5
   
   - [1, 1, Conv, [64, 3, 2]] # 6-z1-0
   - [2, 1, Conv, [64, 3, 1]] # 7-z1-0

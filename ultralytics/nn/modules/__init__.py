@@ -26,6 +26,7 @@ from .block import (
     SPP,
     SPPELAN,
     SPPF,
+    SPPFS,
     ADown,
     BNContrastiveHead,
     Bottleneck,
@@ -48,6 +49,7 @@ from .block import (
     ResNetLayer,
     Silence,
     PSA,
+    PSAS,
 )
 from .conv import (
     CBAM,
@@ -105,6 +107,7 @@ __all__ = (
     "HGStem",
     "SPP",
     "SPPF",
+    "SPPFS",
     "C1",
     "C2",
     "C3",
@@ -143,4 +146,5 @@ __all__ = (
     "CBLinear",
     "Silence",
     "PSA",
+    "PSAS",
 )

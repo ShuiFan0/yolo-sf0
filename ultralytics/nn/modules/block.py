@@ -192,7 +192,7 @@ class SPPFS(nn.Module):
         super().__init__()
         c_ = c1 // 2  # hidden channels
         self.cv1 = ConvS(c1, c_, 1, 1)
-        self.cv2 = ConvS(c_ * 4, c2, 1, 1)
+        self.cv2 = Conv(c_ * 4, c2, 1, 1)
         self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
 
     def forward(self, x):
@@ -802,14 +802,14 @@ class PSA(nn.Module):
 
 class PSAS(nn.Module):
 
-    def __init__(self, c1, c2, e=0.5):
+    def __init__(self, c1, c2, e=0.5, num_heads=None):
         super().__init__()
-        assert(c1 == c2)
-        self.c = int(c1 * e)
+        # assert(c1 == c2)
+        self.c = int(c2 * e)
         self.cv1 = ConvS(c1, 2 * self.c, 1, 1)
-        self.cv2 = ConvS(2 * self.c, c1, 1)
+        self.cv2 = ConvS(2 * self.c, c2, 1)
         
-        self.attn = Attention(self.c, attn_ratio=0.5, num_heads=self.c // 64)
+        self.attn = Attention(self.c, attn_ratio=0.5, num_heads=(self.c // 64) if self.c >128 else (self.c // 32) if self.c > 64 else (self.c // 16) if (self.c > 32) else (self.c // 8) if self.c > 16 else (self.c // 4) if self.c > 8 else (self.c // 2))
         self.ffn = nn.Sequential(
             Conv(self.c, self.c*2, 1),
             Conv(self.c*2, self.c, 1, act=False)

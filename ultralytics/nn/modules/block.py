@@ -802,7 +802,7 @@ class PSA(nn.Module):
 
 class PSAS(nn.Module):
 
-    def __init__(self, c1, c2, e=0.5, num_heads=None):
+    def __init__(self, c1, c2, e=0.5):
         super().__init__()
         # assert(c1 == c2)
         self.c = int(c2 * e)

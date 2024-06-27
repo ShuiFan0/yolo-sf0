@@ -302,10 +302,8 @@ class C2fSD(nn.Module):
         self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
 
     def forward(self, x):
-        return self.cv3(self.c2fs(x))
-
-    def forward_split(self, x):
-        return self.cv3(self.c2fs(x))
+        y = self.c2fs(x)
+        return self.cv3(y) + y
 
 
 class C3(nn.Module):

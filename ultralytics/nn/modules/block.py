@@ -274,7 +274,7 @@ class C2fS(nn.Module):
         super().__init__()
         self.c = int(c2 * e)  # hidden channels
         self.cv1 = ConvS(c1, 2 * self.c, 1, 1)
-        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.cv2 = ConvS((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
         self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n))
 
     def forward(self, x):
@@ -298,23 +298,14 @@ class C2fSD(nn.Module):
         expansion.
         """
         super().__init__()
-        self.c = int(c2 * e)  # hidden channels
-        self.cv1 = ConvS(c1, 2 * self.c, 1, 1)
-        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.c2fs = C2fS(c1, c2, n, shortcut, g, e)
         self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
-        self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n))
 
     def forward(self, x):
-        """Forward pass through C2f layer."""
-        y = list(self.cv1(x).chunk(2, 1))
-        y.extend(m(y[-1]) for m in self.m)
-        return self.cv3(self.cv2(torch.cat(y, 1)))
+        return self.cv3(self.c2fs(x))
 
     def forward_split(self, x):
-        """Forward pass using split() instead of chunk()."""
-        y = list(self.cv1(x).split((self.c, self.c), 1))
-        y.extend(m(y[-1]) for m in self.m)
-        return self.cv3(self.cv2(torch.cat(y, 1)))
+        return self.cv3(self.c2fs(x))
 
 
 class C3(nn.Module):

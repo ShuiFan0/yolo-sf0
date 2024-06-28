@@ -18,12 +18,14 @@ from ultralytics.nn.modules import (
     SPPELAN,
     SPPF,
     SPPFS,
+    SPPFSD,
     ADown,
     Bottleneck,
     BottleneckCSP,
     C2f,
     C2fS,
     C2fSD,
+    C2fD,
     C2fAttn,
     C3Ghost,
     C3x,
@@ -55,6 +57,7 @@ from ultralytics.nn.modules import (
     Silence,
     PSA,
     PSAS,
+    PSASD,
     SCDown,
     WorldDetect,
 )
@@ -879,6 +882,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             SPP,
             SPPF,
             SPPFS,
+            SPPFSD,
             DWConv,
             Focus,
             BottleneckCSP,
@@ -887,6 +891,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             C2f,
             C2fS,
             C2fSD,
+            C2fD,
             RepNCSPELAN4,
             ADown,
             SPPELAN,
@@ -900,6 +905,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             RepC3,
             PSA,
             PSAS,
+            PSASD,
             SCDown,
         }:
             c1, c2 = ch[f], args[0]
@@ -912,7 +918,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 )  # num heads
 
             args = [c1, c2, *args[1:]]
-            if m in {BottleneckCSP, C1, C2, C2f, C2fS, C2fSD, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3}:
+            if m in {BottleneckCSP, C1, C2, C2f, C2fS, C2fSD, C2fD, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3}:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:

@@ -15,12 +15,14 @@ __all__ = (
     "SPP",
     "SPPF",
     "SPPFS",
+    "SPPFSD",
     "C1",
     "C2",
     "C3",
     "C2f",
     "C2fS",
     "C2fSD",
+    "C2fD",
     "C2fAttn",
     "ImagePoolingAttn",
     "ContrastiveHead",
@@ -41,6 +43,9 @@ __all__ = (
     "CBLinear",
     "Silence",
 
+    "PSA",
+    "PSAS",
+    "PSASD",
     "SCDown",
 )
 
@@ -201,6 +206,20 @@ class SPPFS(nn.Module):
         y = [self.cv1(x)]
         y.extend(self.m(y[-1]) for _ in range(3))
         return self.cv2(torch.cat(y, 1))
+    
+class SPPFSD(nn.Module):
+    """aaa"""
+
+    def __init__(self, c1, c2, k=5):
+        """aaa
+        """
+        super().__init__()
+        self.main = SPPFS(c1, c2, k)
+        self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
+
+    def forward(self, x):
+        y = self.main(x)
+        return self.cv3(y) + y
 
 
 class C1(nn.Module):
@@ -299,6 +318,22 @@ class C2fSD(nn.Module):
         """
         super().__init__()
         self.c2fs = C2fS(c1, c2, n, shortcut, g, e)
+        self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
+
+    def forward(self, x):
+        y = self.c2fs(x)
+        return self.cv3(y) + y
+
+
+class C2fD(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__()
+        self.c2fs = C2f(c1, c2, n, shortcut, g, e)
         self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
 
     def forward(self, x):
@@ -837,6 +872,20 @@ class PSAS(nn.Module):
         b = b + self.attn(b)
         b = b + self.ffn(b)
         return self.cv2(torch.cat((a, b), 1))
+    
+class PSASD(nn.Module):
+    """aaa"""
+
+    def __init__(self, c1, c2, e=0.5):
+        """aaa
+        """
+        super().__init__()
+        self.main = PSAS(c1, c2, e)
+        self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
+
+    def forward(self, x):
+        y = self.main(x)
+        return self.cv3(y) + y
     
 
     

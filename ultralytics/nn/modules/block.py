@@ -1,6 +1,8 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
 """Block modules."""
 
+from pickle import NONE
+from tkinter import N
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -286,14 +288,14 @@ class C2f(nn.Module):
 class C2fS(nn.Module):
     """Faster Implementation of CSP Bottleneck with 2 convolutions."""
 
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+    def __init__(self, c1, c2, n=1, shortcut=False, inS=True, outS=True, g=1, e=0.5):
         """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
         expansion.
         """
         super().__init__()
         self.c = int(c2 * e)  # hidden channels
-        self.cv1 = ConvS(c1, 2 * self.c, 1, 1)
-        self.cv2 = ConvS((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.cv1 = ConvS(c1, 2 * self.c, 1, 1) if inS else Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = ConvS((2 + n) * self.c, c2, 1) if outS else Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
         self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n))
 
     def forward(self, x):
@@ -309,20 +311,32 @@ class C2fS(nn.Module):
         return self.cv2(torch.cat(y, 1))
 
 
-class C2fSD(nn.Module):
+class C2fSD(C2fS):
     """Faster Implementation of CSP Bottleneck with 2 convolutions."""
 
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+    def __init__(self, c1, c2, n=1, shortcut=False, inS=True, outS=True, inD=False, outD=None, g=1, e=0.5):
         """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
         expansion.
         """
-        super().__init__()
-        self.c2fs = C2fS(c1, c2, n, shortcut, g, e)
-        self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
+        super().__init__(c1=c1, c2=c2, n=n, shortcut=shortcut, inS=inS, outS=outS, g=g, e=e)
+        
+        if inD is None:
+            inD = inS
+            pass
+        
+        if outD is None:
+            outD = outS
+            pass
 
-    def forward(self, x):
-        y = self.c2fs(x)
-        return self.cv3(y) + y
+        if inD:
+            cv1 = self.cv1
+            self.cv1 = nn.Sequential(cv1, SConvShort(2 * self.c))
+            pass
+        
+        if outD:
+            cv2 = self.cv2
+            self.cv2 = nn.Sequential(cv2, SConvShort(c2))
+            pass
 
 
 class C2fD(nn.Module):
@@ -897,3 +911,13 @@ class SCDown(nn.Module):
 
     def forward(self, x):
         return self.cv2(self.cv1(x))
+    
+
+class SConvShort(nn.Module):
+    def __init__(self, c, k=3, s=1):
+        super().__init__()
+        self.cv = Conv(c, c, k=k, s=s, g=c, act=False)
+
+    def forward(self, x):
+        return x + self.cv(x)
+    

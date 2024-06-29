@@ -54,7 +54,9 @@ from .block import (
     PSA,
     PSAS,
     PSASD,
+    C2fCIB,
     SCDown,
+    RepVGGDW
 )
 from .conv import (
     CBAM,
@@ -158,5 +160,7 @@ __all__ = (
     "PSA",
     "PSAS",
     "PSASD",
+    "C2fCIB",
     "SCDown",
+    "RepVGGDW",
 )

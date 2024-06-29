@@ -10,6 +10,7 @@ import torch.nn as nn
 __all__ = (
     "ConvSX1",
     "ConvS",
+    "ConvSD",
     "Conv",
     "Conv2",
     "LightConv",
@@ -150,6 +151,24 @@ class ConvS(nn.Module):
     def forward(self, x):
         """Apply convolution, batch normalization and activation to input tensor."""
         return self.conv1(x) - self.conv2(x)
+
+
+class ConvSD(nn.Module):
+    """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
+
+    default_act = nn.SiLU()  # default activation
+
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+        """Initialize Conv layer with given arguments including activation."""
+        super().__init__()
+        
+        self.convS = ConvS(c1=c1, c2=c2, k=k, s=s, p=p, g=g, d=d, act=act)
+        self.conv = Conv(c1=c2, c2=c2, k=3, g=c2, act=False)
+        
+    def forward(self, x):
+        """Apply convolution, batch normalization and activation to input tensor."""
+        y = self.convS(x);
+        return self.conv(y) + y
 
 
 class Conv(nn.Module):

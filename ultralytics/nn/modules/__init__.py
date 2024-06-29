@@ -62,6 +62,7 @@ from .conv import (
     Concat,
     ConvSX1,
     ConvS,
+    ConvSD,
     Conv,
     Conv2,
     ConvTranspose,
@@ -90,6 +91,7 @@ from .transformer import (
 __all__ = (
     "ConvSX1",
     "ConvS",
+    "ConvSD",
     "Conv",
     "Conv2",
     "LightConv",

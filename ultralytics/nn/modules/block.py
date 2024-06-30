@@ -993,3 +993,92 @@ class SConvShort(nn.Module):
     def forward(self, x):
         return x + self.cv(x)
     
+
+
+class ToConvWeight(nn.Module):
+    def __init__(self, c1, c2, k=3):
+        super().__init__()
+        
+        # 让qk在除最终k*k外，保持尽可能的平衡
+        c2a=c2
+        c2b=k*k
+        if c2 % 64 == 0:
+            c2a=c2a//8
+            c2b=c2b*8
+            pass
+        elif c2 %16 == 0:
+            c2a=c2a//4
+            c2b=c2b*4
+            pass
+        elif c2 % 4 == 0:
+            c2a=c2a//2
+            c2b=c2b*2
+            pass
+        
+        assert(c2*k*k == c2a*c2b)
+        self.c2=c2
+        self.k=k
+        self.c2a=c2a
+        self.c2b=c2b
+        
+        
+        self.qk = Conv(c1, self.c2a + self.c2b, 1, act=False)
+
+    def forward(self, x):
+        B, C, H, W = x.shape
+        N = H * W
+        qk = self.qk(x)
+        q, k = qk.view(B, self.c2a + self.c2b, N).split([self.c2a, self.c2b], dim=1)
+
+        attn = (q @ k.transpose(-2, -1))
+        attn = attn.softmax(dim=-1)
+        
+        return attn.reshape(B, self.c2, k, k)
+
+
+    
+class DynamicConvS(nn.Module):
+    def __init__(self, c1, c2, s):
+        super().__init__()
+        self.cv1 = ConvS(c1, c2, 1, 1)
+        self.c=c2
+        self.bn = nn.BatchNorm2d(c2)
+        # self.cv2 = Conv(c2, c2, k=k, s=s, g=c2, act=False)
+
+    def forward(self, x, convWeight,s=1):
+        x = self.cv1(x)
+        
+        # x=x.unsqueeze(2) #(B, C, H, W)增加维度成(B, C, 1, H, W)
+        # x=x.permute(2, 1, 0, 3, 4) #(B, C, 1, H, W)转换成(1, C, B, H, W)
+        
+        convWeight=convWeight.unsqueeze(2) #(B, C, k1, k2)增加维度成(B, C, 1, k1, k2)
+        # convWeight = convWeight.permute(2, 1, 0, 3, 4) #(B, C, 1, k1, k2)转化成(1, C, B, k1, k2)
+        
+        # y = nn.functional.conv3d(x,convWeight, bias=None, stride=(1,s,s), padding=(0,convWeight.shape[-2]//2,convWeight.shape[-1]//2), groups = self.c)
+        B=x.shape[0]
+        
+        xc = list(x.chunk(B, dim=0)) #对批次进行分割
+        stride=(s,s)
+        padding=(convWeight.shape[-2]//2,convWeight.shape[-1]//2)
+        
+        y=[]
+        y.extend(nn.functional.conv2d(value,convWeight[index], bias=None, stride=stride, padding=padding, groups = self.c) for index, value in enumerate(xc))
+        return self.bn(torch.cat(y,0))
+    
+
+class Split(nn.Module):
+
+    def __init__(self, c1, index, lenght):
+
+        super().__init__()
+        
+        assert(index>0)
+        assert(lenght>0)
+        assert(index+lenght <= c1)
+        
+        self.index = index
+        self.indexEnd = index + lenght
+
+    def forward(self, x):
+        
+        return x[:,self.index:self.indexEnd]

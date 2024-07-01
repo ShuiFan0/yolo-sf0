@@ -1052,7 +1052,12 @@ class DynamicConvS(nn.Module):
         self.c=c2
         self.s=s
         self.bn = nn.BatchNorm2d(c2)
-        # self.cv2 = Conv(c2, c2, k=k, s=s, g=c2, act=False)
+        self.proj = Conv(c2, c2, 1, act=False)
+        self.ffn = nn.Sequential(
+            Conv(c2, c2*2, 1),
+            Conv(c2*2, c2, 1, act=False)
+        )
+        self.cv2 = ConvS(c2, c2, k=1)
 
     def forward(self, x):
         convWeight = x[1]
@@ -1074,7 +1079,11 @@ class DynamicConvS(nn.Module):
         
         y=[]
         y.extend(nn.functional.conv2d(value,convWeight[index], bias=None, stride=stride, padding=padding, groups = self.c) for index, value in enumerate(xc))
-        return self.bn(torch.cat(y,0))
+        
+        b = x
+        b = b + self.proj(self.bn(torch.cat(y,0)))
+        b = b + self.ffn(b)
+        return self.cv2(b)
     
 
 class SplitConvWeight(nn.Module):

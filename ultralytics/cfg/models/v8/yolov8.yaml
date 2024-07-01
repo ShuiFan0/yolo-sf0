@@ -144,29 +144,29 @@ head:
 
 
   - [62, 1, nn.Upsample, [None, 2, "nearest"]] # 95
-  - [[-1, 52, 74], 1, Concat, [1]] # 96-cat backbone P4
+  - [[74], 1, Concat, [1]] # 96-cat backbone P4
   - [[-1, 67], 1, DynamicConvS, [64]] # 97
-  - [[-1, -2], 1, Concat, [1]] # 98
+  - [[-1, -3, 52, 74], 1, Concat, [1]] # 98
   - [-1, 3, C2fSD, [512]] # 99
 
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 100
-  - [[-1, 48, 78], 1, Concat, [1]] # 101-cat backbone P3
+  - [[78], 1, Concat, [1]] # 101-cat backbone P3
   - [[-1, 68], 1, DynamicConvS, [64]] # 102
-  - [[-1, -2], 1, Concat, [1]] # 103
+  - [[-1, -3, 48, 78], 1, Concat, [1]] # 103
   - [-1, 3, C2fSD, [256]] # 104 (P3/8-small)
   
   - [[-1, 82], 1, Concat, [1]] # 105-cat backbone P3
   - [-1, 1, Conv, [256, 3, 2]] # 106
-  - [[-1, 99, 86], 1, Concat, [1]] # 107-cat head P4
+  - [[86], 1, Concat, [1]] # 107-cat head P4
   - [[-1, 69], 1, DynamicConvS, [64]] # 108
-  - [[-1, -2], 1, Concat, [1]] # 109
+  - [[-1, -3, 99, 86], 1, Concat, [1]] # 109
   - [-1, 3, C2fSD, [512]] # 110 (P4/16-medium)
   
   - [[-1, 90], 1, Concat, [1]] # 111-cat backbone P3
   - [-1, 1, SCDown, [512, 3, 2]] # 112
-  - [[-1, 62, 94], 1, Concat, [1]] # 113-cat head P5
+  - [[94], 1, Concat, [1]] # 113-cat head P5
   - [[-1, 70], 1, DynamicConvS, [64]] # 114
-  - [[-1, -2], 1, Concat, [1]] # 115
+  - [[-1, -3, 62, 94], 1, Concat, [1]] # 115
   - [-1, 3, C2fCIB, [1024, True, True]] # 116 (P5/32-large)
 
   - [[104, 110, 116], 1, Detect, [nc]] # Detect(P3, P4, P5)

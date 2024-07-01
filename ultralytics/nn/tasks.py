@@ -61,6 +61,9 @@ from ultralytics.nn.modules import (
     PSAS,
     PSASD,
     SCDown,
+    ToConvWeight,
+    SplitConvWeight,
+    DynamicConvS,
     RepVGGDW,
     WorldDetect,
 )
@@ -929,6 +932,23 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             if m in {BottleneckCSP, C1, C2, C2f, C2fS, C2fSD, C2fD, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3, C2fCIB}:
                 args.insert(2, n)  # number of repeats
                 n = 1
+                
+        elif m is ToConvWeight:
+            c1, c2 = ch[f], args[0]
+            c2 = int(c2 * width)
+            args = [c1, c2, *args[1:]]
+
+        elif m is SplitConvWeight:
+            c1, index, lenght = ch[f], args[0], args[1]
+            index = int(index * width)   #进行宽度适配
+            lenght = int(lenght * width) #进行宽度适配
+            args = [c1, index, lenght, *args[2:]]
+            c2 = lenght
+        elif m is DynamicConvS:
+            c1, c2 = ch[f[0]], args[0]
+            c2 = int(c2 * width)
+            args = [c1, c2, *args[1:]]
+            
         elif m is AIFI:
             args = [ch[f], *args]
         elif m in {HGStem, HGBlock}:

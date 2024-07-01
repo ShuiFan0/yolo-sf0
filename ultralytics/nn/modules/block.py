@@ -50,6 +50,10 @@ __all__ = (
     "PSAS",
     "PSASD",
     "SCDown",
+    
+    "ToConvWeight",
+    "SplitConvWeight",
+    "DynamicConvS",
 )
 
 
@@ -996,21 +1000,25 @@ class SConvShort(nn.Module):
 
 
 class ToConvWeight(nn.Module):
-    def __init__(self, c1, c2, k=3):
+    def __init__(self, c1, c2, convNumber, k=3):
         super().__init__()
         
-        # 让qk在除最终k*k外，保持尽可能的平衡
+        # 进行输入参数判断及内部参数初始化
+        assert(c2%convNumber == 0)  #必须可以被整除
+        
+        ic2=c2 // convNumber
         c2a=c2
         c2b=k*k
-        if c2 % 64 == 0:
+        # 让qk在除“头部convNumber”、“尾部k*k”外，保持尽可能的平衡
+        if ic2 % 64 == 0:
             c2a=c2a//8
             c2b=c2b*8
             pass
-        elif c2 %16 == 0:
+        elif ic2 %16 == 0:
             c2a=c2a//4
             c2b=c2b*4
             pass
-        elif c2 % 4 == 0:
+        elif ic2 % 4 == 0:
             c2a=c2a//2
             c2b=c2b*2
             pass
@@ -1038,14 +1046,17 @@ class ToConvWeight(nn.Module):
 
     
 class DynamicConvS(nn.Module):
-    def __init__(self, c1, c2, s):
+    def __init__(self, c1, c2, s=1):
         super().__init__()
         self.cv1 = ConvS(c1, c2, 1, 1)
         self.c=c2
+        self.s=s
         self.bn = nn.BatchNorm2d(c2)
         # self.cv2 = Conv(c2, c2, k=k, s=s, g=c2, act=False)
 
-    def forward(self, x, convWeight,s=1):
+    def forward(self, x):
+        convWeight = x[1]
+        x = x[0]
         x = self.cv1(x)
         
         # x=x.unsqueeze(2) #(B, C, H, W)增加维度成(B, C, 1, H, W)
@@ -1058,7 +1069,7 @@ class DynamicConvS(nn.Module):
         B=x.shape[0]
         
         xc = list(x.chunk(B, dim=0)) #对批次进行分割
-        stride=(s,s)
+        stride=(self.s,self.s)
         padding=(convWeight.shape[-2]//2,convWeight.shape[-1]//2)
         
         y=[]
@@ -1066,7 +1077,7 @@ class DynamicConvS(nn.Module):
         return self.bn(torch.cat(y,0))
     
 
-class Split(nn.Module):
+class SplitConvWeight(nn.Module):
 
     def __init__(self, c1, index, lenght):
 
@@ -1081,4 +1092,4 @@ class Split(nn.Module):
 
     def forward(self, x):
         
-        return x[:,self.index:self.indexEnd]
+        return x[:,self.index:self.indexEnd,:,:]#(B, C, k1, k2)

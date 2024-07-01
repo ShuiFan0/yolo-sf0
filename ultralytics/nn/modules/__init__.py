@@ -56,6 +56,9 @@ from .block import (
     PSASD,
     C2fCIB,
     SCDown,
+    ToConvWeight,
+    SplitConvWeight,
+    DynamicConvS,
     RepVGGDW
 )
 from .conv import (
@@ -161,6 +164,9 @@ __all__ = (
     "PSAS",
     "PSASD",
     "C2fCIB",
+    "ToConvWeight",
     "SCDown",
+    "SplitConvWeight",
+    "DynamicConvS",
     "RepVGGDW",
 )

@@ -1041,7 +1041,7 @@ class ToConvWeight(nn.Module):
         attn = (q @ k.transpose(-2, -1))
         attn = attn.softmax(dim=-1)
         
-        return attn.reshape(B, self.c2, k, k)
+        return attn.reshape(B, self.c2, self.k, self.k)
 
 
     
@@ -1083,7 +1083,7 @@ class SplitConvWeight(nn.Module):
 
         super().__init__()
         
-        assert(index>0)
+        assert(index>=0)
         assert(lenght>0)
         assert(index+lenght <= c1)
         

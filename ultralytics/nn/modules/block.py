@@ -1006,8 +1006,10 @@ class ToConvWeight(nn.Module):
         # 进行输入参数判断及内部参数初始化
         assert(c2%convNumber == 0)  #必须可以被整除
         
+        self.c2=c2
+        self.convNumber = convNumber
         ic2=c2 // convNumber
-        c2a=c2
+        c2a=ic2
         c2b=k*k
         # 让qk在除“头部convNumber”、“尾部k*k”外，保持尽可能的平衡
         if ic2 % 64 == 0:
@@ -1023,20 +1025,19 @@ class ToConvWeight(nn.Module):
             c2b=c2b*2
             pass
         
-        assert(c2*k*k == c2a*c2b)
-        self.c2=c2
+        assert(c2*k*k == self.convNumber * c2a * c2b)
         self.k=k
         self.c2a=c2a
         self.c2b=c2b
         
         
-        self.qk = Conv(c1, self.c2a + self.c2b, 1, act=False)
+        self.qk = Conv(c1, self.convNumber * (self.c2a + self.c2b), 1, act=False)
 
     def forward(self, x):
         B, C, H, W = x.shape
         N = H * W
         qk = self.qk(x)
-        q, k = qk.view(B, self.c2a + self.c2b, N).split([self.c2a, self.c2b], dim=1)
+        q, k = qk.view(B, self.convNumber, self.c2a + self.c2b, N).split([self.c2a, self.c2b], dim=2)
 
         attn = (q @ k.transpose(-2, -1))
         attn = attn.softmax(dim=-1)

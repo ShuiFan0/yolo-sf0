@@ -1047,11 +1047,11 @@ class ToConvWeight(nn.Module):
 
     
 class DynamicConvS(nn.Module):
-    def __init__(self, c1, c2, s=1):
+    def __init__(self, c1, c2):
         super().__init__()
         self.cv1 = ConvS(c1, c2, 1, 1)
         self.c=c2
-        self.s=s
+        self.s=s=1 #暂不支持跨步非1的
         self.bn = nn.BatchNorm2d(c2)
         self.proj = Conv(c2, c2, 1, act=False)
         self.ffn = nn.Sequential(

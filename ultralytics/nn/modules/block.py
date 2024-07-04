@@ -53,7 +53,7 @@ __all__ = (
     
     "ToConvWeight",
     "SplitConvWeight",
-    "DynamicConvS",
+    "DynamicThroughConvS",
 )
 
 
@@ -1046,7 +1046,7 @@ class ToConvWeight(nn.Module):
 
 
     
-class DynamicConvS(nn.Module):
+class DynamicThroughConvS(nn.Module):
     def __init__(self, c1, c2):
         super().__init__()
         self.cv1 = ConvS(c1, c2, 1, 1)
@@ -1059,6 +1059,8 @@ class DynamicConvS(nn.Module):
             Conv(c2*2, c2, 1, act=False)
         )
         self.cv2 = ConvS(c2, c2, k=1)
+        
+        self.scale_factor = nn.Parameter(torch.zeros(1, c2, 1, 1)) # 添加可学习的缩放因子(输出初始为0)
 
     def forward(self, x):
         convWeight = x[1]
@@ -1084,7 +1086,7 @@ class DynamicConvS(nn.Module):
         b = x
         b = b + self.proj(self.bn(torch.cat(y,0)))
         b = b + self.ffn(b)
-        return self.cv2(b)
+        return self.cv2(b) * self.scale_factor
     
 
 class SplitConvWeight(nn.Module):

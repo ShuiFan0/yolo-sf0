@@ -1039,7 +1039,7 @@ class ToConvWeight(nn.Module):
         qk = self.qk(x)
         q, k = qk.view(B, self.convNumber, self.c2a + self.c2b, N).split([self.c2a, self.c2b], dim=2)
 
-        attn = (q @ k.transpose(-2, -1))
+        attn = (q @ k.transpose(-2, -1)) * (1.0/N) #长宽变大时，自动平衡数值大小，避免softmax指数运算时溢出
         attn = attn.softmax(dim=-1)
         
         return attn.reshape(B, self.c2, self.k, self.k)
@@ -1060,7 +1060,7 @@ class DynamicThroughConvS(nn.Module):
         )
         self.cv2 = ConvS(c2, c2, k=1)
         
-        self.scale_factor = nn.Parameter(torch.zeros(1, c2, 1, 1)) # 添加可学习的缩放因子(输出初始为0)
+        #self.scale_factor = nn.Parameter(torch.zeros(1, c2, 1, 1)) # 添加可学习的缩放因子(输出初始为0)
 
     def forward(self, x):
         convWeight = x[1]
@@ -1086,7 +1086,7 @@ class DynamicThroughConvS(nn.Module):
         b = x
         b = b + self.proj(self.bn(torch.cat(y,0)))
         b = b + self.ffn(b)
-        return self.cv2(b) * self.scale_factor
+        return self.cv2(b) #* self.scale_factor
     
 
 class SplitConvWeight(nn.Module):

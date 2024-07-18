@@ -1040,7 +1040,7 @@ class ToConvWeight(nn.Module):
         q, k = qk.view(B, self.convNumber, self.c2a + self.c2b, N).split([self.c2a, self.c2b], dim=2)
 
         attn = (q @ k.transpose(-2, -1)) * (1.0/N) #长宽变大时，自动平衡数值大小，避免softmax指数运算时溢出
-        attn = attn.softmax(dim=-1)
+        attn = attn.softmax(dim=-1) #以概率的方式进行激活，确保生成的数值的稳定性
         
         return attn.reshape(B, self.c2, self.k, self.k)
 
@@ -1059,21 +1059,14 @@ class DynamicThroughConvS(nn.Module):
             Conv(c2*2, c2, 1, act=False)
         )
         self.cv2 = ConvS(c2, c2, k=1)
-        
-        #self.scale_factor = nn.Parameter(torch.zeros(1, c2, 1, 1)) # 添加可学习的缩放因子(输出初始为0)
 
     def forward(self, x):
         convWeight = x[1]
         x = x[0]
         x = self.cv1(x)
         
-        # x=x.unsqueeze(2) #(B, C, H, W)增加维度成(B, C, 1, H, W)
-        # x=x.permute(2, 1, 0, 3, 4) #(B, C, 1, H, W)转换成(1, C, B, H, W)
-        
         convWeight=convWeight.unsqueeze(2) #(B, C, k1, k2)增加维度成(B, C, 1, k1, k2)
-        # convWeight = convWeight.permute(2, 1, 0, 3, 4) #(B, C, 1, k1, k2)转化成(1, C, B, k1, k2)
         
-        # y = nn.functional.conv3d(x,convWeight, bias=None, stride=(1,s,s), padding=(0,convWeight.shape[-2]//2,convWeight.shape[-1]//2), groups = self.c)
         B=x.shape[0]
         
         xc = list(x.chunk(B, dim=0)) #对批次进行分割
@@ -1086,7 +1079,7 @@ class DynamicThroughConvS(nn.Module):
         b = x
         b = b + self.proj(self.bn(torch.cat(y,0)))
         b = b + self.ffn(b)
-        return self.cv2(b) #* self.scale_factor
+        return self.cv2(b)
     
 
 class SplitConvWeight(nn.Module):

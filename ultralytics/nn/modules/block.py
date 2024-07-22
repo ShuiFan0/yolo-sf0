@@ -1065,19 +1065,23 @@ class DynamicThroughConvS(nn.Module):
         x = x[0]
         x = self.cv1(x)
         
-        convWeight=convWeight.unsqueeze(2) #(B, C, k1, k2)增加维度成(B, C, 1, k1, k2)
-        
-        B=x.shape[0]
-        
-        xc = list(x.chunk(B, dim=0)) #对批次进行分割
+
+        # 使用group convolution来实现动态卷积  
+        B, _, kH, kW = convWeight.shape   #(B, C, k1, k2)
+        ic = B * self.c
+        ix = x.view(1, ic, x.size(2), x.size(3))  # (1, B*C, H, W)  
+        iconvWeight = convWeight.view(ic, 1, kH, kW)  # (B*C, 1, kH, kW)
+
+        #一些卷积的参数
         stride=(self.s,self.s)
         padding=(convWeight.shape[-2]//2,convWeight.shape[-1]//2)
-        
-        y=[]
-        y.extend(nn.functional.conv2d(value,convWeight[index], bias=None, stride=stride, padding=padding, groups = self.c) for index, value in enumerate(xc))
+                  
+        # 应用卷积
+        y = nn.functional.conv2d(ix, iconvWeight, stride=stride, padding=padding, groups=ic)  
+        y = y.view(B, self.c, y.size(2), y.size(3))  # (B, C, H, W)  
         
         b = x
-        b = b + self.proj(self.bn(torch.cat(y,0)))
+        b = b + self.proj(self.bn(y))
         b = b + self.ffn(b)
         return self.cv2(b)
     
@@ -1097,4 +1101,4 @@ class SplitConvWeight(nn.Module):
 
     def forward(self, x):
         
-        return x[:,self.index:self.indexEnd,:,:]#(B, C, k1, k2)
+        return (x[:,self.index:self.indexEnd,:,:]).contiguous()#(B, C, k1, k2) #转成连续的内存

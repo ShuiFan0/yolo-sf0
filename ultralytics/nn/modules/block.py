@@ -952,10 +952,7 @@ class PSAS(nn.Module):
         self.cv2 = ConvS(2 * self.c, c2, 1)
         
         self.attn = Attention(self.c, attn_ratio=0.5, num_heads=(self.c // 64) if self.c >128 else (self.c // 32) if self.c > 64 else (self.c // 16) if (self.c > 32) else (self.c // 8) if self.c > 16 else (self.c // 4) if self.c > 8 else (self.c // 2))
-        self.ffn = nn.Sequential(
-            Conv(self.c, self.c*2, 1),
-            Conv(self.c*2, self.c, 1, act=False)
-        )
+        self.ffn = ConvS(self.c, self.c, 1, dropout=0.1)
         
     def forward(self, x):
         a, b = self.cv1(x).split((self.c, self.c), dim=1)
@@ -1053,7 +1050,7 @@ class DynamicThroughConvS(nn.Module):
         self.c=c2
         self.s=s=1 #暂不支持跨步非1的
         self.proj = Conv(c2, c2, 1, act=False)
-        self.cv2 = ConvS(c2, c2, k=1)
+        self.cv2 = ConvS(c2, c2, k=1, dropout=0.1)
 
     def forward(self, x):
         convWeight = x[1]

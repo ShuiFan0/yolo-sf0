@@ -38,15 +38,18 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
 class ConvS(nn.Module):
     """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
 
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True, dropout=0):
         """Initialize ConvS layer with given arguments including activation."""
         super().__init__()
         
         self.conv = Conv(c1=c1, c2=2*c2, k=k, s=s, p=p, g=g, d=d, act=act)
+        self.dropout = None if dropout == 0 else nn.Dropout2d(dropout, inplace= True)  # 添加 Dropout 层 
         
     def forward(self, x):
         """Apply convolution, batch normalization and activation to input tensor."""
-        cv1, cv2 = self.conv(x).chunk(2, 1)
+        cv = self.conv(x)
+        cv = cv if self.dropout is None else self.dropout(cv)
+        cv1, cv2 = cv.chunk(2, 1)
         return cv1 - cv2
 
 

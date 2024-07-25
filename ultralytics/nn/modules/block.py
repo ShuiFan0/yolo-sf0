@@ -1052,12 +1052,7 @@ class DynamicThroughConvS(nn.Module):
         self.cv1 = ConvS(c1, c2, 1, 1)
         self.c=c2
         self.s=s=1 #暂不支持跨步非1的
-        self.bn = nn.BatchNorm2d(c2)
         self.proj = Conv(c2, c2, 1, act=False)
-        self.ffn = nn.Sequential(
-            Conv(c2, c2*2, 1),
-            Conv(c2*2, c2, 1, act=False)
-        )
         self.cv2 = ConvS(c2, c2, k=1)
 
     def forward(self, x):
@@ -1081,8 +1076,7 @@ class DynamicThroughConvS(nn.Module):
         y = y.view(B, self.c, y.size(2), y.size(3))  # (B, C, H, W)  
         
         b = x
-        b = b + self.proj(self.bn(y))
-        b = b + self.ffn(b)
+        b = b + self.proj(y)
         return self.cv2(b)
     
 

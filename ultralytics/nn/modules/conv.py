@@ -36,32 +36,68 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
 
 
 class ConvS(nn.Module):
-    """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
+    """正负数据区间的卷积层，带有可选的Dropout和激活功能。"""
 
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True, dropout=0, dropoutModel="Dropout2d"):
-        """Initialize ConvS layer with given arguments including activation."""
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True, dropout=0.0, dropoutModel="Dropout2d"):
+        """  
+        初始化ConvS层。  
+          
+        参数：  
+            c1 (int): 输入通道数。  
+            c2 (int): 输出通道数。  
+            k (int, 可选): 卷积核大小。默认为1。  
+            s (int, 可选): 卷积步长。默认为1。  
+            p (int, 可选): 填充大小。默认为None。  
+            g (int, 可选): 分组卷积的组数。默认为1。  
+            d (int, 可选): 卷积的膨胀系数。默认为1。  
+            act (bool, 可选): 是否应用激活函数。默认为True。  
+            dropout (float, 可选): Dropout概率。默认为0.0（不应用Dropout）。  
+            dropoutModel (str, 可选): 要应用的Dropout类型（"Dropout"或"Dropout2d"）。默认为"Dropout2d"。  
+        """  
         super().__init__()
         
         self.conv = Conv(c1=c1, c2=2*c2, k=k, s=s, p=p, g=g, d=d, act=act)
-        self.dropout = ConvS.getDroupout(dropout, dropoutModel)  # 添加 Dropout 层 
-        
-    def getDroupout(dropout, dropoutModel):
-        if dropout == 0:
+        self.dropout = ConvS.getDropout(dropout, dropoutModel)  # 如果需要，添加Dropout层
+     
+    @staticmethod
+    def getDropout(dropout, dropoutModel):
+        """  
+        根据Dropout概率和模型获取适当的Dropout层。  
+          
+        参数：  
+            dropout (float): Dropout概率。  
+            dropoutModel (str): 要应用的Dropout类型（"Dropout"或"Dropout2d"）。  
+              
+        返回：  
+            nn.Module或None: Dropout层，如果不应用Dropout则返回None。  
+        """  
+        if dropout == 0.0:
             return None
         
-        if dropout=="Dropout":
+        if dropoutModel=="Dropout":
             return nn.Dropout(dropout, inplace= True)
-        if dropout=="Dropout2d":
+        if dropoutModel=="Dropout2d":
             return nn.Dropout2d(dropout, inplace= True)
 
         return None
 
     def forward(self, x):
-        """Apply convolution, batch normalization and activation to input tensor."""
-        cv = self.conv(x)
-        cv = cv if self.dropout is None else self.dropout(cv)
-        cv1, cv2 = cv.chunk(2, 1)
-        return cv1 - cv2
+        """  
+        应用卷积，可选地应用Dropout，拆分输出，并减去两部分。  
+          
+        参数：  
+            x (torch.Tensor): 输入张量。  
+              
+        返回：  
+            torch.Tensor: 应用卷积、Dropout（如果应用）、拆分和减法后的输出张量。  
+        """ 
+        cv = self.conv(x)   # 一次卷积（加快运算速度）
+        
+        if self.dropout is not None:  
+            cv = self.dropout(cv)   # 在这里使用dropout，可以使结果的丢弃呈现4种状态（正负全保留、正保留、负保留、全丢弃）
+            
+        cv1, cv2 = cv.chunk(2, 1)   # 沿通道维度拆分成两部分
+        return cv1 - cv2    # 减去两部分
 
 
 class ConvSD(nn.Module):

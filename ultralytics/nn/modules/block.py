@@ -952,7 +952,7 @@ class PSAS(nn.Module):
         self.cv2 = ConvS(2 * self.c, c2, 1)
         
         self.attn = Attention(self.c, attn_ratio=0.5, num_heads=(self.c // 64) if self.c >128 else (self.c // 32) if self.c > 64 else (self.c // 16) if (self.c > 32) else (self.c // 8) if self.c > 16 else (self.c // 4) if self.c > 8 else (self.c // 2))
-        self.ffn = ConvS(self.c, self.c, 1, dropout=0.1, dropoutModel="Dropout") #随机破坏同位置语义信息、跨位置轮廓信息。我认为当前分支的此二者应当确保不稳定性，确保模型不过度依赖当前分支
+        self.ffn = ConvS(self.c, self.c, 1)
         
     def forward(self, x):
         a, b = self.cv1(x).split((self.c, self.c), dim=1)

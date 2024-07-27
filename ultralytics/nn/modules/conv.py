@@ -79,7 +79,7 @@ class ConvS(nn.Module):
         if dropoutModel=="Dropout2d":
             return nn.Dropout2d(dropout, inplace= True)
 
-        return None
+        raise ValueError("dropoutModel的值无法被识别")
 
     def forward(self, x):
         """  

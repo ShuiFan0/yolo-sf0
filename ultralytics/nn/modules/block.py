@@ -941,7 +941,16 @@ class PSA(nn.Module):
         b = b + self.attn(b)
         b = b + self.ffn(b)
         return self.cv2(torch.cat((a, b), 1))
+    
 
+
+class AttentionS(Attention):
+    def __init__(self, dim, num_heads=8,attn_ratio=0.5):
+        super().__init__(dim, num_heads,attn_ratio)
+        
+        self.proj = ConvS(dim, dim, 1, dropout=0.1, dropoutModel="Dropout")
+
+    
 class PSAS(nn.Module):
 
     def __init__(self, c1, c2, e=0.5):
@@ -951,7 +960,7 @@ class PSAS(nn.Module):
         self.cv1 = ConvS(c1, 2 * self.c, 1, 1)
         self.cv2 = ConvS(2 * self.c, c2, 1)
         
-        self.attn = Attention(self.c, attn_ratio=0.5, num_heads=(self.c // 64) if self.c >128 else (self.c // 32) if self.c > 64 else (self.c // 16) if (self.c > 32) else (self.c // 8) if self.c > 16 else (self.c // 4) if self.c > 8 else (self.c // 2))
+        self.attn = AttentionS(self.c, attn_ratio=0.5, num_heads=(self.c // 64) if self.c >128 else (self.c // 32) if self.c > 64 else (self.c // 16) if (self.c > 32) else (self.c // 8) if self.c > 16 else (self.c // 4) if self.c > 8 else (self.c // 2))
         self.ffn = ConvS(self.c, self.c, 1)
         
     def forward(self, x):
@@ -1049,8 +1058,8 @@ class DynamicThroughConvS(nn.Module):
         self.cv1 = ConvS(c1, c2, 1, 1)
         self.c=c2
         self.s=s=1 #暂不支持跨步非1的
-        self.proj = Conv(c2, c2, 1, act=False)
-        self.cv2 = ConvS(c2, c2, k=1, dropout=0.1, dropoutModel="Dropout") #随机破坏同位置语义信息、跨位置轮廓信息。我认为当前分支的此二者应当确保不稳定性，确保模型不过度依赖当前分支
+        self.proj = ConvS(c2, c2, 1, dropout=0.1, dropoutModel="Dropout")
+        self.cv2 = ConvS(c2, c2, k=1)
 
     def forward(self, x):
         convWeight = x[1]

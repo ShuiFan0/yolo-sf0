@@ -1059,7 +1059,7 @@ class DynamicThroughConvS(nn.Module):
         self.c=c2
         self.s=s=1 #暂不支持跨步非1的
         self.proj = ConvS(c2, c2, 1, dropout=0.1, dropoutModel="Dropout")
-        self.cv2 = ConvS(c2, c2, k=1)
+        #self.cv2 = ConvS(c2, c2, k=1)
 
     def forward(self, x):
         convWeight = x[1]
@@ -1067,23 +1067,30 @@ class DynamicThroughConvS(nn.Module):
         x = self.cv1(x)
         
 
-        # 使用group convolution来实现动态卷积  
+        # 获取尺寸信息
         B, _, kH, kW = convWeight.shape   #(B, C, k1, k2)
         ic = B * self.c
-        ix = x.view(1, ic, x.size(2), x.size(3))  # (1, B*C, H, W)  
+        
+        _, _, H, W= x.shape
+        
+        # 计算一些卷积的参数
+        stride=(self.s,self.s)
+        padding=(kH//2,kW//2)
+        
+        # 使用group convolution来实现动态卷积  
+        ix = x.view(1, ic, H, W)  # (1, B*C, H, W)  
         iconvWeight = convWeight.view(ic, 1, kH, kW)  # (B*C, 1, kH, kW)
 
-        #一些卷积的参数
-        stride=(self.s,self.s)
-        padding=(convWeight.shape[-2]//2,convWeight.shape[-1]//2)
                   
         # 应用卷积
         y = nn.functional.conv2d(ix, iconvWeight, stride=stride, padding=padding, groups=ic)  
-        y = y.view(B, self.c, y.size(2), y.size(3))  # (B, C, H, W)  
+        y = y.view(B, self.c, H, W)  # (B, C, H, W)  
         
-        b = x
-        b = b + self.proj(y)
-        return self.cv2(b)
+        # b = x
+        # b = b + self.proj(y)
+        # return self.cv2(b)
+        return x + self.proj(y)
+    
     
 
 class SplitConvWeight(nn.Module):

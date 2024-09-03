@@ -58,6 +58,7 @@ from .block import (
     SCDown,
     ToConvWeight,
     SplitConvWeight,
+    SplitConv2dResult,
     DynamicThroughConvS,
     DynamicConvS,
     RepVGGDW
@@ -166,6 +167,7 @@ __all__ = (
     "ToConvWeight",
     "SCDown",
     "SplitConvWeight",
+    "SplitConv2dResult",
     "DynamicThroughConvS",
     "DynamicConvS",
     "RepVGGDW",

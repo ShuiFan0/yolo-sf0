@@ -53,6 +53,7 @@ __all__ = (
     
     "ToConvWeight",
     "SplitConvWeight",
+    "SplitConv2dResult",
     "DynamicThroughConvS",
     "DynamicConvS",
 )
@@ -1126,6 +1127,23 @@ class DynamicConvS(nn.Module):
     
 
 class SplitConvWeight(nn.Module):
+
+    def __init__(self, c1, index, lenght):
+
+        super().__init__()
+        
+        assert(index>=0)
+        assert(lenght>0)
+        assert(index+lenght <= c1)
+        
+        self.index = index
+        self.indexEnd = index + lenght
+
+    def forward(self, x):
+        
+        return (x[:,self.index:self.indexEnd,:,:]).contiguous()#(B, C, k1, k2) #转成连续的内存
+    
+class SplitConv2dResult(nn.Module):
 
     def __init__(self, c1, index, lenght):
 

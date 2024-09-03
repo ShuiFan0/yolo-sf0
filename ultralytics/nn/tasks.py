@@ -62,6 +62,7 @@ from ultralytics.nn.modules import (
     SCDown,
     ToConvWeight,
     SplitConvWeight,
+    SplitConv2dResult,
     DynamicThroughConvS,
     DynamicConvS,
     RepVGGDW,
@@ -937,7 +938,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             c2 = int(c2 * width)
             args = [c1, c2, *args[1:]]
 
-        elif m is SplitConvWeight:
+        elif m in {SplitConvWeight, SplitConv2dResult}:
             c1, index, lenght = ch[f], args[0], args[1]
             index = int(index * width)   #进行宽度适配
             lenght = int(lenght * width) #进行宽度适配

@@ -87,17 +87,17 @@ backbone:
 
 # YOLOv8.0n head
 head:
-  - [[14, 44], 1, DynamicThroughConvS, [64]] # 50
+  - [[14, 44], 1, DynamicConvS, [64]] # 50
 
-  - [[10, 45], 1, DynamicThroughConvS, [64]] ##51
+  - [[10, 45], 1, DynamicConvS, [64]] ##51
 
-  - [[10, 46], 1, DynamicThroughConvS, [64]] ##52
+  - [[10, 46], 1, DynamicConvS, [64]] ##52
 
-  - [[14, 47], 1, DynamicThroughConvS, [64]] ##53
+  - [[14, 47], 1, DynamicConvS, [64]] ##53
 
-  - [[14, 48], 1, DynamicThroughConvS, [64]] ##54
+  - [[14, 48], 1, DynamicConvS, [64]] ##54
 
-  - [[18, 49], 1, DynamicThroughConvS, [64]] ##55
+  - [[18, 49], 1, DynamicConvS, [64]] ##55
 
 
   - [39, 1, nn.Upsample, [None, 2, "nearest"]] # 56

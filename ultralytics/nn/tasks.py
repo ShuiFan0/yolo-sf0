@@ -63,6 +63,7 @@ from ultralytics.nn.modules import (
     ToConvWeight,
     SplitConvWeight,
     DynamicThroughConvS,
+    DynamicConvS,
     RepVGGDW,
     WorldDetect,
 )
@@ -942,7 +943,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             lenght = int(lenght * width) #进行宽度适配
             args = [c1, index, lenght, *args[2:]]
             c2 = lenght
-        elif m is DynamicThroughConvS:
+        elif m in {DynamicThroughConvS, DynamicConvS}:
             c1, c2 = ch[f[0]], args[0]
             c2 = int(c2 * width)
             args = [c1, c2, *args[1:]]

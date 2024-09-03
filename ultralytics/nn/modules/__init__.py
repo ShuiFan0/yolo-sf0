@@ -59,6 +59,7 @@ from .block import (
     ToConvWeight,
     SplitConvWeight,
     DynamicThroughConvS,
+    DynamicConvS,
     RepVGGDW
 )
 from .conv import (
@@ -166,5 +167,6 @@ __all__ = (
     "SCDown",
     "SplitConvWeight",
     "DynamicThroughConvS",
+    "DynamicConvS",
     "RepVGGDW",
 )

@@ -947,22 +947,22 @@ class PSA(nn.Module):
 
 
 class AttentionS(Attention):
-    def __init__(self, dim, num_heads=8,attn_ratio=0.5):
+    def __init__(self, dim, num_heads=8,attn_ratio=0.5, dropout=0.0, dropoutModel="Dropout"):
         super().__init__(dim, num_heads,attn_ratio)
         
-        self.proj = ConvS(dim, dim, 1, dropout=0.1, dropoutModel="Dropout")
+        self.proj = ConvS(dim, dim, 1, dropout=dropout, dropoutModel=dropoutModel)
 
     
 class PSAS(nn.Module):
 
-    def __init__(self, c1, c2, e=0.5):
+    def __init__(self, c1, c2, e=0.5, dropout=0.0, dropoutModel="Dropout"):
         super().__init__()
         # assert(c1 == c2)
         self.c = int(c2 * e)
         self.cv1 = ConvS(c1, 2 * self.c, 1, 1)
         self.cv2 = ConvS(2 * self.c, c2, 1)
         
-        self.attn = AttentionS(self.c, attn_ratio=0.5, num_heads=(self.c // 64) if self.c >128 else (self.c // 32) if self.c > 64 else (self.c // 16) if (self.c > 32) else (self.c // 8) if self.c > 16 else (self.c // 4) if self.c > 8 else (self.c // 2))
+        self.attn = AttentionS(self.c, attn_ratio=0.5, num_heads=(self.c // 64) if self.c >128 else (self.c // 32) if self.c > 64 else (self.c // 16) if (self.c > 32) else (self.c // 8) if self.c > 16 else (self.c // 4) if self.c > 8 else (self.c // 2), dropout=dropout, dropoutModel=dropoutModel)
         self.ffn = ConvS(self.c, self.c, 1)
         
     def forward(self, x):
@@ -974,11 +974,11 @@ class PSAS(nn.Module):
 class PSASD(nn.Module):
     """aaa"""
 
-    def __init__(self, c1, c2, e=0.5):
+    def __init__(self, c1, c2, e=0.5, dropout=0.0, dropoutModel="Dropout"):
         """aaa
         """
         super().__init__()
-        self.main = PSAS(c1, c2, e)
+        self.main = PSAS(c1, c2, e, dropout=dropout, dropoutModel=dropoutModel)
         self.cv3 = Conv(c2, c2, k=3, s=1, g=c2, act=False)
 
     def forward(self, x):
@@ -1055,13 +1055,13 @@ class ToConvWeight(nn.Module):
 
     
 class DynamicThroughConvS(nn.Module):
-    def __init__(self, c1, c2):
+    def __init__(self, c1, c2, dropout=0.0, dropoutModel="Dropout"):
         super().__init__()
         
         self.conv = ConvS(c1, c2, 1, 1)
         self.c=c2
         self.s=s=1 #暂不支持跨步非1的
-        self.proj = ConvS(c2, c2, 1, dropout=0.1, dropoutModel="Dropout")
+        self.proj = ConvS(c2, c2, 1, dropout=dropout, dropoutModel=dropoutModel)
         self.conv2 = ConvS(c2, c2, 1, 1)
 
     def forward(self, x):
@@ -1091,13 +1091,13 @@ class DynamicThroughConvS(nn.Module):
         return self.conv2(x + self.proj(y))
         
 class DynamicConvS(nn.Module):
-    def __init__(self, c1, c2, s=1):
+    def __init__(self, c1, c2, s=1, dropout=0.0, dropoutModel="Dropout"):
         super().__init__()
         
         self.conv = ConvS(c1, c2, 1, 1)
         self.c=c2
         self.s=s 
-        self.proj = ConvS(c2, c2, 1, dropout=0.1, dropoutModel="Dropout")
+        self.proj = ConvS(c2, c2, 1, dropout=dropout, dropoutModel=dropoutModel)
 
     def forward(self, x):
         convWeight = x[1]

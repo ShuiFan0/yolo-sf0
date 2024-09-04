@@ -1058,14 +1058,15 @@ class DynamicThroughConvS(nn.Module):
     def __init__(self, c1, c2):
         super().__init__()
         
-        assert(c1 == c2)
+        self.conv = ConvS(c1, c2, 1, 1)
         self.c=c2
         self.s=s=1 #暂不支持跨步非1的
         self.proj = ConvS(c2, c2, 1, dropout=0.1, dropoutModel="Dropout")
+        self.conv2 = ConvS(c2, c2, 1, 1)
 
     def forward(self, x):
         convWeight = x[1]
-        x = x[0]
+        x = self.conv(x[0])
         
 
         # 获取尺寸信息
@@ -1087,7 +1088,7 @@ class DynamicThroughConvS(nn.Module):
         y = nn.functional.conv2d(ix, iconvWeight, stride=stride, padding=padding, groups=ic)  
         y = y.view(B, self.c, H, W)  # (B, C, H, W)  
         
-        return x + self.proj(y)
+        return self.conv2(x + self.proj(y))
         
 class DynamicConvS(nn.Module):
     def __init__(self, c1, c2, s=1):

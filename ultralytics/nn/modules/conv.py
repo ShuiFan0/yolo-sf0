@@ -56,6 +56,7 @@ class ConvS(nn.Module):
         """  
         super().__init__()
         
+        assert(g != 1 or not None)
         self.conv = Conv(c1=c1, c2=2*c2, k=k, s=s, p=p, g=g, d=d, act=act)
         self.dropout = ConvS.getDropout(dropout, dropoutModel)  # 如果需要，添加Dropout层
      

@@ -56,8 +56,8 @@ class ConvS(nn.Module):
         """  
         super().__init__()
         
-        assert(g != 1 or not None)
-        self.conv = Conv(c1=c1, c2=2*c2, k=k, s=s, p=p, g=g, d=d, act=act)
+        self.in_concatCopy = g > 1 # 如果分组数大于1，为了确保一一对应，则需要将输入复制一份后沿着通道进行连接
+        self.conv = Conv(c1=c1, c2=2*c2, k=k, s=s, p=p, g=1, d=d, act=act) if self.in_concatCopy is False else Conv(c1=2*c1, c2=2*c2, k=k, s=s, p=p, g=2*g, d=d, act=act)
         self.dropout = ConvS.getDropout(dropout, dropoutModel)  # 如果需要，添加Dropout层
      
     @staticmethod
@@ -92,6 +92,9 @@ class ConvS(nn.Module):
         返回：  
             torch.Tensor: 应用卷积、Dropout（如果应用）、拆分和减法后的输出张量。  
         """ 
+        if self.in_concatCopy:
+            x=torch.concat([x,x],dim=1) # 如果需要连接副本，则连接起来
+            
         cv = self.conv(x)   # 一次卷积（加快运算速度）
         
         if self.dropout is not None:  

@@ -1091,13 +1091,13 @@ class DynamicThroughConvS(nn.Module):
         return self.conv2(x + self.proj(y))
         
 class DynamicConvS(nn.Module):
-    def __init__(self, c1, c2, s=1, dropout=0.0, dropoutModel="Dropout"):
+    def __init__(self, c1, c2, s=1, g=1, dropout=0.0, dropoutModel="Dropout"):
         super().__init__()
         
-        self.conv = ConvS(c1, c2, 1, 1)
+        self.conv = ConvS(c1, c2, 1)
         self.c=c2
         self.s=s 
-        self.proj = ConvS(c2, c2, 1, dropout=dropout, dropoutModel=dropoutModel)
+        self.proj = ConvS(c2, c2, 1, g=g, dropout=dropout, dropoutModel=dropoutModel)
 
     def forward(self, x):
         convWeight = x[1]

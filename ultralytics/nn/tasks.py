@@ -56,6 +56,7 @@ from ultralytics.nn.modules import (
     Segment,
     Silence,
     C2fCIB,
+    C2fSCIB,
     PSA,
     PSAS,
     PSASD,
@@ -918,6 +919,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             PSASD,
             SCDown,
             C2fCIB,
+            C2fSCIB,
         }:
             c1, c2 = ch[f], args[0]
             if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
@@ -929,7 +931,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 )  # num heads
 
             args = [c1, c2, *args[1:]]
-            if m in {BottleneckCSP, C1, C2, C2f, C2fS, C2fSD, C2fD, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3, C2fCIB}:
+            if m in {BottleneckCSP, C1, C2, C2f, C2fS, C2fSD, C2fD, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3, C2fCIB, C2fSCIB}:
                 args.insert(2, n)  # number of repeats
                 n = 1
                 

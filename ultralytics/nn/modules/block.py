@@ -46,6 +46,8 @@ __all__ = (
     "CBLinear",
     "Silence",
 
+    "C2fCIB",
+    "C2fSCIB",
     "PSA",
     "PSAS",
     "PSASD",
@@ -892,6 +894,16 @@ class C2fCIB(C2f):
         super().__init__(c1, c2, n, shortcut, g, e)
         self.m = nn.ModuleList(CIB(self.c, self.c, shortcut, e=1.0, lk=lk) for _ in range(n))
 
+class C2fSCIB(C2fS):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+
+    def __init__(self, c1, c2, n=1, shortcut=False, lk=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__(c1, c2, n, shortcut, g=g, e=e)
+        self.m = nn.ModuleList(CIB(self.c, self.c, shortcut, e=1.0, lk=lk) for _ in range(n))
+
 
 
 
@@ -1055,14 +1067,13 @@ class ToConvWeight(nn.Module):
 
     
 class DynamicThroughConvS(nn.Module):
-    def __init__(self, c1, c2, dropout=0.0, dropoutModel="Dropout"):
+    def __init__(self, c1, c2, g=1, dropout=0.0, dropoutModel="Dropout"):
         super().__init__()
         
         self.conv = ConvS(c1, c2, 1, 1)
         self.c=c2
-        self.s=s=1 #暂不支持跨步非1的
-        self.proj = ConvS(c2, c2, 1, dropout=dropout, dropoutModel=dropoutModel)
-        self.conv2 = ConvS(c2, c2, 1, 1)
+        self.proj = ConvS(c2, c2, 1, 1, g=g, dropout=dropout, dropoutModel=dropoutModel)
+        self.conv2 = ConvS(c2, c2, 1, 1, g=g)
 
     def forward(self, x):
         convWeight = x[1]
@@ -1076,7 +1087,7 @@ class DynamicThroughConvS(nn.Module):
         _, _, H, W= x.shape
         
         # 计算一些卷积的参数
-        stride=(self.s,self.s)
+        stride=(1,1)
         padding=(kH//2,kW//2)
         
         # 使用group convolution来实现动态卷积  

@@ -1132,7 +1132,7 @@ class DynamicConvS(nn.Module):
                   
         # 应用卷积
         y = nn.functional.conv2d(ix, iconvWeight, stride=stride, padding=padding, groups=ic)  
-        y = y.view(B, self.c, H, W)  # (B, C, H, W)  
+        y = y.view(B, self.c, y.size(2), y.size(3))  # (B, C, H, W)  
         
         return self.proj(y)
     

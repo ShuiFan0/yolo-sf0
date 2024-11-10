@@ -87,12 +87,12 @@ head:
   - [-1, 1, SplitConv2dResult, [0, 64]] ##54
   - [-2, 1, SplitConv2dResult, [64,64]] ##55
   
-  - [[17, 51], 1, DynamicThroughConvS, [128, 1, 0.1]] # 56
+  - [[17, 51], 1, DynamicThroughConvS, [192, 1, 0.1]] # 56
   - [-1, 1, SplitConv2dResult, [0,  64]] ##57
   - [-2, 1, SplitConv2dResult, [64, 64]] ##58
   - [-3, 1, SplitConv2dResult, [128,64]] ##59
 
-  - [[21, 52], 1, DynamicThroughConvS, [128, 1, 0.1]] ##60
+  - [[21, 52], 1, DynamicThroughConvS, [64, 1, 0.1]] ##60
 
   
   - [45, 1, nn.Upsample, [None, 2, "nearest"]] # 61
